@@ -1,37 +1,59 @@
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class OpenAIAPI {
-
-  private final HttpClient client;
   private final String apiKey;
 
   public OpenAIAPI(String apiKey) {
-    this.client = HttpClient.newHttpClient();
     this.apiKey = apiKey;
   }
 
-  // Method to generate AI response
-  public String generateAIResponse(String prompt) throws IOException, InterruptedException {
-    String endpoint = "https://api.openai.com/v1/completions"; // OpenAI API endpoint
-    String body = "{\"model\": \"text-davinci-003\", \"prompt\": \"" + prompt + "\", \"max_tokens\": 100}";
+  public String generateAIResponse(String message) {
+    String url = "https://api.openai.com/v1/chat/completions";
+    String model = "gpt-3.5-turbo"; // The GPT model to use.
 
-    HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint))
-      .header("Content-Type", "application/json")
-      .header("Authorization", "Bearer " + this.apiKey)
-      .POST(HttpRequest.BodyPublishers.ofString(body))
-      .build();
+    try {
 
-    HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+      // Create the HTTP POST request
+      URL obj = new URL(url);
+      HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+      con.setRequestMethod("POST");
+      con.setRequestProperty("Authorization", "Bearer " + this.apiKey);
+      con.setRequestProperty("Content-Type", "application/json");
 
-    if (response.statusCode() == 200) {
-      // Parse the response to get the AI's answer
-      return response.body();
-    } else {
-      throw new IOException("Error calling OpenAI API: " + response.statusCode());
+      // Build the request body
+      String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]}";
+      con.setDoOutput(true);
+      OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
+      writer.write(body);
+      writer.flush();
+      writer.close();
+
+      // Get the response
+      BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+      String inputLine;
+      StringBuilder response = new StringBuilder();
+      while ((inputLine = in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+
+      // Extract and return the response content
+      return this.extractContentFromResponse(response.toString());
+
+    } catch (IOException e) {
+      throw new RuntimeException("Error with OpenAI API request: " + e.getMessage());
     }
+  }
+
+  // This method extracts the response from the OpenAI API
+  private String extractContentFromResponse(String response) {
+    int startMarker = response.indexOf("content") + 11; // Locate the start of content
+    int endMarker = response.indexOf("\"", startMarker); // Locate the end of content
+    return response.substring(startMarker, endMarker); // Return the response content
   }
 }
