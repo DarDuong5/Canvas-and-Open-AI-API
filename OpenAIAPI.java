@@ -5,6 +5,9 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class OpenAIAPI {
   private final String apiKey;
 
@@ -23,16 +26,27 @@ public class OpenAIAPI {
       HttpURLConnection con = (HttpURLConnection) obj.openConnection();
       con.setRequestMethod("POST");
       con.setRequestProperty("Authorization", "Bearer " + this.apiKey);
+      System.out.println(con.getRequestProperty("Authorization"));
+      System.out.println(this.apiKey);
       con.setRequestProperty("Content-Type", "application/json");
 
       // Build the request body
-      String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]}";
+      // String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]}";
+      JSONObject jsonBody = new JSONObject();
+      jsonBody.put("model", model);
+      jsonBody.put("messages", new JSONArray().put(new JSONObject()
+        .put("role", "user")
+        .put("content", message)
+      ));
+      String body = jsonBody.toString();
       con.setDoOutput(true);
       OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
       writer.write(body);
       writer.flush();
       writer.close();
 
+      int responseCode = con.getResponseCode();
+      System.out.println("Response Code: " + responseCode);
       // Get the response
       BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
       String inputLine;
