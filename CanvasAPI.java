@@ -77,8 +77,6 @@ public class CanvasAPI {
   }
 
   public String extractTextFromPDF(String fileUrl) throws IOException, InterruptedException {
-    fileUrl += "?download=1"; // Append download parameter
-
     HttpRequest request = HttpRequest.newBuilder(URI.create(fileUrl))
       .header("Authorization", "Bearer " + this.apiToken)
       .GET()
