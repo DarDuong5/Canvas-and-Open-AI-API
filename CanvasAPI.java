@@ -85,7 +85,6 @@ public class CanvasAPI {
     HttpResponse<byte[]> response = this.client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
     String contentType = response.headers().firstValue("Content-Type").orElse("");
-    System.out.println("Response Content-Type: " + contentType);  // Debugging: print content type
 
     if (!contentType.equals("application/pdf")) {
       String htmlResponse = new String(response.body());
