@@ -2,11 +2,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import javax.json.*;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 public class CanvasAPI {
   private final String baseUrl;
@@ -56,6 +60,7 @@ public class CanvasAPI {
 
       if (!discussions.isEmpty()) {
         JsonObject discussion = discussions.getJsonObject(0);
+        int discussionID = discussion.getInt("id");
         String title = discussion.getString("title");
         String url = discussion.getString("url");
 
@@ -66,6 +71,7 @@ public class CanvasAPI {
         description = description.replaceAll("<[^>]*>", "");  // Remove HTML tags
 
         return Json.createObjectBuilder()
+          .add("id", String.valueOf(discussionID))
           .add("title", title)
           .add("url", url)
           .add("description", description)
@@ -97,6 +103,35 @@ public class CanvasAPI {
       return stripper.getText(document);
     } catch (IOException e) {
       throw new IOException("Error extracting text from PDF: " + e.getMessage());
+    }
+  }
+
+  // Post response on discussion page
+  public void postDiscussionReply(String courseID, String discussionID, String message) throws IOException, InterruptedException {
+    String endpoint = "/api/v1/courses/" + courseID + "/discussion_topics/" + discussionID + "/entries";
+
+    URI uri = URI.create(this.baseUrl + endpoint);
+
+    JsonObject json = Json.createObjectBuilder()
+      .add("message", message)
+      .build();
+
+    HttpRequest request = HttpRequest.newBuilder(uri)
+      .header("Authorization", "Bearer " + this.apiToken)
+      .header("Content-Type", "application/json")
+      .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+      .build();
+
+    // Send the request and handle the response
+    HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+
+    // Check if the response was successful (HTTP_OK or HTTP_CREATED)
+    int responseCode = response.statusCode();
+    if (responseCode == HttpURLConnection.HTTP_CREATED || responseCode == HttpURLConnection.HTTP_OK) {
+      System.out.println("Reply posted successfully.");
+    } else {
+      System.out.println("Failed to post reply. HTTP response code: " + responseCode);
+      System.out.println("Response body: " + response.body());
     }
   }
 }
