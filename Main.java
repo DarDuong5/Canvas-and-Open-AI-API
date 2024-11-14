@@ -9,7 +9,7 @@ public class Main {
     String openAIApiKey = "Open AI API Key Goes Here!!!";
 
 // Initialize Canvas and OpenAI API clients
-    CanvasAPI canvasAPI = new CanvasAPI(baseUrl, apiToken);
+    CanvasAPI canvasAPI = new CanvasAPI(baseUrl, CanvasApiToken);
     OpenAIAPI openAIAPI = new OpenAIAPI(openAIApiKey);
 
     try {
@@ -27,6 +27,7 @@ public class Main {
 
       if (mostRecentDiscussion != null) {
         System.out.println("Most Recent Discussion:");
+        System.out.println("Discussion ID" + mostRecentDiscussion.getString("id"));
         System.out.println("Title: " + mostRecentDiscussion.getString("title"));
         System.out.println("Description: " + mostRecentDiscussion.getString("description"));
         System.out.println("URL: " + mostRecentDiscussion.getString("url"));
@@ -48,6 +49,9 @@ public class Main {
         // Send prompt to OpenAI and get the response
         String aiResponse = openAIAPI.generateAIResponse(prompt);
         System.out.println("AI Response: " + aiResponse);
+
+        canvasAPI.postDiscussionReply(courseID, mostRecentDiscussion.getString("id"), aiResponse);
+
       } else {
         System.out.println("Unable to generate AI response due to missing file or discussion.");
       }
