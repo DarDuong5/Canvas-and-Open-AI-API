@@ -3,10 +3,10 @@ import java.io.IOException;
 
 public class Main {
   public static void main(String[] args) {
-    String baseUrl = "Domain URL Goes Here!!!";
-    String apiToken = "Canvas Token Goes Here!!!";
-    String courseID = "Your Course ID Goes Here!!!";
-    String openAIApiKey = "Open AI API Key Goes Here!!!";
+    String baseUrl = "https://setonhall.instructure.com/";
+    String CanvasApiToken = System.getenv("CANVAS_API_KEY");
+    String courseID = "31315";
+    String openAIApiKey = System.getenv("OPENAI_API_KEY");
 
 // Initialize Canvas and OpenAI API clients
     CanvasAPI canvasAPI = new CanvasAPI(baseUrl, CanvasApiToken);
